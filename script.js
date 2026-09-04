@@ -1,134 +1,134 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: sans-serif;
+// LocalStorageからタスクを復元（なければ空配列）
+let todos = JSON.parse(localStorage.getItem("todos")) || [];
+
+// DOM要素の取得
+const todoForm = document.getElementById("todo-form");
+const taskInput = document.getElementById("task-input");
+const dueInput = document.getElementById("due-input");
+const todoList = document.getElementById("todo-list");
+const progressPercentage = document.getElementById("progress-percentage");
+const completedCount = document.getElementById("completed-count");
+const totalCount = document.getElementById("total-count");
+const progressBarFill = document.getElementById("progress-bar-fill");
+const toast = document.getElementById("toast");
+
+// タスク保存関数
+function saveTodos() {
+  localStorage.setItem("todos", JSON.stringify(todos));
 }
 
-body {
-  background-color: #f4f6f8;
-  display: flex;
-  justify-content: center;
-  padding: 40px 16px;
+// フォーム送信時（タスク追加）
+todoForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const newTodo = {
+    id: Date.now(),
+    text: taskInput.value.trim(),
+    due: dueInput.value,
+    completed: false
+  };
+
+  todos.push(newTodo);
+  saveTodos();
+
+  taskInput.value = "";
+  dueInput.value = "";
+
+  render();
+});
+
+// チェック切り替え
+function toggleTodo(id) {
+  let justCompleted = false;
+
+  todos = todos.map((todo) => {
+    if (todo.id === id) {
+      const nextStatus = !todo.completed;
+      if (nextStatus) justCompleted = true; // 今回完了になったか判定
+      return { ...todo, completed: nextStatus };
+    }
+    return todo;
+  });
+
+  saveTodos();
+  render();
+
+  if (justCompleted) {
+    showToast();
+  }
 }
 
-.container {
-  background: #ffffff;
-  width: 100%;
-  max-width: 480px;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+// タスク削除
+function deleteTodo(id) {
+  todos = todos.filter((todo) => todo.id !== id);
+  saveTodos();
+  render();
 }
 
-h1 {
-  font-size: 24px;
-  margin-bottom: 20px;
-  text-align: center;
-  color: #333;
+// アニメーショントースト表示
+function showToast() {
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2200);
 }
 
-/* 進捗バー */
-.progress-section {
-  margin-bottom: 20px;
+// 達成率の計算・表示更新
+function updateProgress() {
+  const total = todos.length;
+  const completed = todos.filter((t) => t.completed).length;
+  const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+  totalCount.textContent = total;
+  completedCount.textContent = completed;
+  progressPercentage.textContent = `${percentage}%`;
+  progressBarFill.style.width = `${percentage}%`;
 }
 
-.progress-text {
-  font-size: 14px;
-  margin-bottom: 6px;
-  color: #555;
+// 一覧描画
+function render() {
+  todoList.innerHTML = "";
+
+  todos.forEach((todo) => {
+    const li = document.createElement("li");
+    li.className = `todo-item ${todo.completed ? "completed" : ""}`;
+
+    // チェックボックス
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = todo.completed;
+    checkbox.addEventListener("change", () => toggleTodo(todo.id));
+
+    // テキスト領域
+    const contentDiv = document.createElement("div");
+    contentDiv.className = "todo-content";
+
+    const textDiv = document.createElement("div");
+    textDiv.className = "todo-text";
+    textDiv.textContent = todo.text;
+
+    const dueDiv = document.createElement("div");
+    dueDiv.className = "todo-due";
+    dueDiv.textContent = `期限: ${todo.due}`;
+
+    contentDiv.appendChild(textDiv);
+    contentDiv.appendChild(dueDiv);
+
+    // 削除ボタン
+    const delBtn = document.createElement("button");
+    delBtn.className = "delete-btn";
+    delBtn.textContent = "✕";
+    delBtn.addEventListener("click", () => deleteTodo(todo.id));
+
+    li.appendChild(checkbox);
+    li.appendChild(contentDiv);
+    li.appendChild(delBtn);
+
+    todoList.appendChild(li);
+  });
+
+  updateProgress();
 }
 
-.progress-bar-bg {
-  width: 100%;
-  height: 10px;
-  background-color: #e0e0e0;
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  width: 0%;
-  background-color: #4caf50;
-  transition: width 0.3s ease;
-}
-
-/* 入力エリア */
-.todo-form {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.todo-form input[type="text"] {
-  flex: 2;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.todo-form input[type="date"] {
-  flex: 1.5;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.todo-form button {
-  width: 40px;
-  height: 38px;
-  font-size: 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.todo-form button:hover {
-  background-color: #0056b3;
-}
-
-/* リスト表示 */
-.todo-list {
-  list-style: none;
-}
-
-.todo-item {
-  display: flex;
-  align-items: center;
-  padding: 10px 8px;
-  border-bottom: 1px solid #eee;
-  gap: 12px;
-}
-
-.todo-item input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-.todo-content {
-  flex: 1;
-}
-
-.todo-text {
-  font-size: 15px;
-  color: #333;
-}
-
-.todo-due {
-  font-size: 12px;
-  color: #888;
-}
-
-/* 完了状態 */
-.completed .todo-text {
-  text-decoration: line-through;
-  color: #aaa;
-}
-
-.completed .todo-due {
-  color: #ccc;
-}
+// 初期起動時の描画
+render();
