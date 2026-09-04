@@ -1,0 +1,96 @@
+// タスクデータを保持する配列
+let todos = [];
+
+// DOM要素の取得
+const todoForm = document.getElementById("todo-form");
+const taskInput = document.getElementById("task-input");
+const dueInput = document.getElementById("due-input");
+const todoList = document.getElementById("todo-list");
+const progressPercentage = document.getElementById("progress-percentage");
+const completedCount = document.getElementById("completed-count");
+const totalCount = document.getElementById("total-count");
+const progressBarFill = document.getElementById("progress-bar-fill");
+
+// フォーム送信時の処理（タスクの追加）
+todoForm.addEventListener("submit", (e) => {
+  e.preventDefault(); // 画面リロードを防止
+
+  const newTodo = {
+    id: Date.now(), // 一意のID
+    text: taskInput.value.trim(),
+    due: dueInput.value,
+    completed: false
+  };
+
+  todos.push(newTodo);
+
+  // フォーム初期化
+  taskInput.value = "";
+  dueInput.value = "";
+
+  render();
+});
+
+// タスク完了状態の切り替え
+function toggleTodo(id) {
+  todos = todos.map((todo) => {
+    if (todo.id === id) {
+      return { ...todo, completed: !todo.completed };
+    }
+    return todo;
+  });
+  render();
+}
+
+// 達成率の計算と画面更新
+function updateProgress() {
+  const total = todos.length;
+  const completed = todos.filter((todo) => todo.completed).length;
+  const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+  // テキスト更新
+  totalCount.textContent = total;
+  completedCount.textContent = completed;
+  progressPercentage.textContent = `${percentage}%`;
+
+  // 進捗バー更新
+  progressBarFill.style.width = `${percentage}%`;
+}
+
+// 画面の再描画
+function render() {
+  todoList.innerHTML = "";
+
+  todos.forEach((todo) => {
+    const li = document.createElement("li");
+    li.className = `todo-item ${todo.completed ? "completed" : ""}`;
+
+    // チェックボックス
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = todo.completed;
+    checkbox.addEventListener("change", () => toggleTodo(todo.id));
+
+    // タスク情報エリア
+    const contentDiv = document.createElement("div");
+    contentDiv.className = "todo-content";
+
+    const textSpan = document.createElement("div");
+    textSpan.className = "todo-text";
+    textSpan.textContent = todo.text;
+
+    const dueSpan = document.createElement("div");
+    dueSpan.className = "todo-due";
+    dueSpan.textContent = `期限: ${todo.due}`;
+
+    contentDiv.appendChild(textSpan);
+    contentDiv.appendChild(dueSpan);
+
+    li.appendChild(checkbox);
+    li.appendChild(contentDiv);
+
+    todoList.appendChild(li);
+  });
+
+  updateProgress();
+}

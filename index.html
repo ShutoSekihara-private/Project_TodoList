@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Todo List</h1>
+
+    <div class="progress-section">
+      <div class="progress-text">
+        達成率: <span id="progress-percentage">0%</span>
+        (<span id="completed-count">0</span> / <span id="total-count">0</span>)
+      </div>
+      <div class="progress-bar-bg">
+        <div id="progress-bar-fill" class="progress-bar-fill"></div>
+      </div>
+    </div>
+
+    <form id="todo-form" class="todo-form">
+      <input type="text" id="task-input" placeholder="タスク内容を入力" required>
+      <input type="date" id="due-input" required>
+      <button type="submit" id="add-btn">+</button>
+    </form>
+
+    <ul id="todo-list" class="todo-list"></ul>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
