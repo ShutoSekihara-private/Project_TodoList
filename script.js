@@ -1,134 +1,188 @@
-// LocalStorageからタスクを復元（なければ空配列）
-let todos = JSON.parse(localStorage.getItem("todos")) || [];
+(function(){
+  const taskInput = document.getElementById('taskInput');
+  const dateInput = document.getElementById('dateInput');
+  const addBtn = document.getElementById('addBtn');
 
-// DOM要素の取得
-const todoForm = document.getElementById("todo-form");
-const taskInput = document.getElementById("task-input");
-const dueInput = document.getElementById("due-input");
-const todoList = document.getElementById("todo-list");
-const progressPercentage = document.getElementById("progress-percentage");
-const completedCount = document.getElementById("completed-count");
-const totalCount = document.getElementById("total-count");
-const progressBarFill = document.getElementById("progress-bar-fill");
-const toast = document.getElementById("toast");
+  const todoList = document.getElementById('todoList');
+  const futureList = document.getElementById('futureList');
+  const doneList = document.getElementById('doneList');
 
-// タスク保存関数
-function saveTodos() {
-  localStorage.setItem("todos", JSON.stringify(todos));
-}
+  const doneCountEl = document.getElementById('doneCount');
+  const rateValueEl = document.getElementById('rateValue');
 
-// フォーム送信時（タスク追加）
-todoForm.addEventListener("submit", (e) => {
-  e.preventDefault();
+  const todoEmptyMsg = document.getElementById('todoEmptyMsg');
+  const futureEmptyMsg = document.getElementById('futureEmptyMsg');
+  const doneEmptyMsg = document.getElementById('doneEmptyMsg');
 
-  const newTodo = {
-    id: Date.now(),
-    text: taskInput.value.trim(),
-    due: dueInput.value,
-    completed: false
-  };
+  const praiseOverlay = document.getElementById('praiseOverlay');
+  const praiseText = document.getElementById('praiseText');
+  const otsukareText = document.getElementById('otsukareText');
 
-  todos.push(newTodo);
-  saveTodos();
+  const praiseWords = [
+    'よく頑張った！！','天才！','すごい！','最高！','えらい！！',
+    'ナイス！','完璧！','その調子！','やったね！','神！！'
+  ];
 
-  taskInput.value = "";
-  dueInput.value = "";
+  const confettiColors = ['#ff8fab','#ffd166','#8fe3c8','#a29bfe','#74b9ff','#ff6b6b'];
 
-  render();
-});
+  let doneCount = 0;
+  let totalCount = 0;
 
-// チェック切り替え
-function toggleTodo(id) {
-  let justCompleted = false;
-
-  todos = todos.map((todo) => {
-    if (todo.id === id) {
-      const nextStatus = !todo.completed;
-      if (nextStatus) justCompleted = true; // 今回完了になったか判定
-      return { ...todo, completed: nextStatus };
-    }
-    return todo;
-  });
-
-  saveTodos();
-  render();
-
-  if (justCompleted) {
-    showToast();
+  function todayStr(){
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
   }
-}
 
-// タスク削除
-function deleteTodo(id) {
-  todos = todos.filter((todo) => todo.id !== id);
-  saveTodos();
-  render();
-}
+  function formatDate(dateStr){
+    const [y,m,d] = dateStr.split('-');
+    return `${m}/${d}`;
+  }
 
-// アニメーショントースト表示
-function showToast() {
-  toast.classList.add("show");
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2200);
-}
+  function updateEmptyMessages(){
+    todoEmptyMsg.style.display = todoList.children.length ? 'none' : 'block';
+    futureEmptyMsg.style.display = futureList.children.length ? 'none' : 'block';
+    doneEmptyMsg.style.display = doneList.children.length ? 'none' : 'block';
+  }
 
-// 達成率の計算・表示更新
-function updateProgress() {
-  const total = todos.length;
-  const completed = todos.filter((t) => t.completed).length;
-  const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+  function updateStats(){
+    doneCountEl.textContent = doneCount;
+    const rate = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+    rateValueEl.textContent = rate;
+  }
 
-  totalCount.textContent = total;
-  completedCount.textContent = completed;
-  progressPercentage.textContent = `${percentage}%`;
-  progressBarFill.style.width = `${percentage}%`;
-}
+  function buildTaskLi(text, dateStr){
+    const li = document.createElement('li');
 
-// 一覧描画
-function render() {
-  todoList.innerHTML = "";
+    const main = document.createElement('div');
+    main.className = 'task-main';
 
-  todos.forEach((todo) => {
-    const li = document.createElement("li");
-    li.className = `todo-item ${todo.completed ? "completed" : ""}`;
+    const span = document.createElement('span');
+    span.className = 'task-text';
+    span.textContent = text;
+    main.appendChild(span);
 
-    // チェックボックス
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = todo.completed;
-    checkbox.addEventListener("change", () => toggleTodo(todo.id));
+    if(dateStr){
+      const dateSpan = document.createElement('span');
+      dateSpan.className = 'task-date';
+      dateSpan.textContent = '期日: ' + formatDate(dateStr);
+      main.appendChild(dateSpan);
+    }
 
-    // テキスト領域
-    const contentDiv = document.createElement("div");
-    contentDiv.className = "todo-content";
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'btn-group';
 
-    const textDiv = document.createElement("div");
-    textDiv.className = "todo-text";
-    textDiv.textContent = todo.text;
+    const completeBtn = document.createElement('button');
+    completeBtn.className = 'complete-btn';
+    completeBtn.textContent = '✓';
+    completeBtn.setAttribute('aria-label','完了');
 
-    const dueDiv = document.createElement("div");
-    dueDiv.className = "todo-due";
-    dueDiv.textContent = `期限: ${todo.due}`;
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '✕';
+    deleteBtn.setAttribute('aria-label','削除');
 
-    contentDiv.appendChild(textDiv);
-    contentDiv.appendChild(dueDiv);
+    btnGroup.appendChild(completeBtn);
+    btnGroup.appendChild(deleteBtn);
 
-    // 削除ボタン
-    const delBtn = document.createElement("button");
-    delBtn.className = "delete-btn";
-    delBtn.textContent = "✕";
-    delBtn.addEventListener("click", () => deleteTodo(todo.id));
+    li.appendChild(main);
+    li.appendChild(btnGroup);
 
-    li.appendChild(checkbox);
-    li.appendChild(contentDiv);
-    li.appendChild(delBtn);
+    deleteBtn.addEventListener('click', () => {
+      li.remove();
+      totalCount = Math.max(0, totalCount - 1);
+      updateStats();
+      updateEmptyMessages();
+    });
 
-    todoList.appendChild(li);
+    completeBtn.addEventListener('click', () => completeTask(li, text));
+
+    return li;
+  }
+
+  function addTask(){
+    const text = taskInput.value.trim();
+    if(!text) return;
+
+    const dateStr = dateInput.value; // '' or 'YYYY-MM-DD'
+    const li = buildTaskLi(text, dateStr);
+
+    if(dateStr && dateStr > todayStr()){
+      futureList.appendChild(li);
+    } else {
+      todoList.appendChild(li);
+    }
+
+    totalCount++;
+
+    taskInput.value = '';
+    dateInput.value = '';
+    taskInput.focus();
+
+    updateStats();
+    updateEmptyMessages();
+  }
+
+  function completeTask(li, text){
+    li.remove();
+
+    const doneLi = document.createElement('li');
+    doneLi.textContent = text;
+    doneList.insertBefore(doneLi, doneList.firstChild);
+
+    doneCount++;
+    updateStats();
+    updateEmptyMessages();
+    showPraise();
+  }
+
+  function showPraise(){
+    const word = praiseWords[Math.floor(Math.random() * praiseWords.length)];
+    praiseText.textContent = word;
+    praiseOverlay.style.display = 'flex';
+
+    // アニメーション再スタートのためのリセット
+    praiseText.style.animation = 'none';
+    otsukareText.style.animation = 'none';
+    void praiseText.offsetWidth;
+    praiseText.style.animation = '';
+    otsukareText.style.animation = '';
+
+    spawnConfetti();
+
+    setTimeout(() => {
+      praiseOverlay.style.display = 'none';
+    }, 1100);
+  }
+
+  function spawnConfetti(){
+    const count = 40;
+    for(let i = 0; i < count; i++){
+      const conf = document.createElement('div');
+      conf.className = 'confetti';
+      const size = 6 + Math.random() * 8;
+      conf.style.width = size + 'px';
+      conf.style.height = (size * 0.4 + 4) + 'px';
+      conf.style.left = Math.random() * 100 + 'vw';
+      conf.style.background = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+      const duration = 1.4 + Math.random() * 1.2;
+      conf.style.animationDuration = duration + 's';
+      conf.style.animationDelay = (Math.random() * 0.3) + 's';
+      document.body.appendChild(conf);
+      setTimeout(() => conf.remove(), (duration + 0.5) * 1000);
+    }
+  }
+
+  addBtn.addEventListener('click', addTask);
+  taskInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      addTask();
+    }
   });
 
-  updateProgress();
-}
-
-// 初期起動時の描画
-render();
+  updateEmptyMessages();
+  updateStats();
+})();

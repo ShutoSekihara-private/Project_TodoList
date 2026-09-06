@@ -1,48 +1,54 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Todo App</title>
-  <!-- ページアイコン（ファビコン）の設定 -->
-  <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>できたことリスト</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <img src="favicon.png" alt="Logo" class="app-logo">
-      <h1>Todo List</h1>
-    </div>
 
-    <!-- 1. タスク作成フォーム -->
-    <form id="todo-form" class="todo-form">
-      <input type="text" id="task-input" placeholder="タスク内容を入力" required>
-      <input type="date" id="due-input" required>
-      <button type="submit" id="add-btn">+</button>
-    </form>
-
-    <!-- 2. ボタン下部の達成率・進捗バー -->
-    <div class="progress-section">
-      <div class="progress-info">
-        <span>達成率</span>
-        <span id="progress-percentage">0%</span>
-      </div>
-      <div class="progress-bar-bg">
-        <div id="progress-bar-fill" class="progress-bar-fill"></div>
-      </div>
-      <div class="task-count-text">
-        完了: <span id="completed-count">0</span> / 全体: <span id="total-count">0</span>
-      </div>
-    </div>
-
-    <!-- 3. タスク一覧表示枠 -->
-    <ul id="todo-list" class="todo-list"></ul>
+<header>
+  <h1>🌟 今日できたことリスト 🌟</h1>
+  <div class="badge-row">
+    <div class="count-badge">達成数：<span id="doneCount">0</span> 個</div>
+    <div class="count-badge rate-badge">達成率：<span id="rateValue">0</span>%</div>
   </div>
+</header>
 
-  <!-- 完了時ポップアップアニメーション -->
-  <div id="toast" class="toast">お疲れさまでした！🎉</div>
+<main>
+  <section class="panel" id="doneSection">
+    <h2>できたこと</h2>
+    <ul id="doneList"></ul>
+    <p class="empty-msg" id="doneEmptyMsg">まだないよ。1つやってみよう！</p>
+  </section>
 
-  <script src="script.js"></script>
+  <section class="panel" id="todoSection">
+    <h2>今日やること</h2>
+    <ul id="todoList"></ul>
+    <p class="empty-msg" id="todoEmptyMsg">下から追加してね📝</p>
+  </section>
+
+  <section class="panel" id="futureSection">
+    <h2>今後やること</h2>
+    <ul id="futureList"></ul>
+    <p class="empty-msg" id="futureEmptyMsg">先の予定はまだないよ</p>
+  </section>
+</main>
+
+<footer>
+  <div class="input-row">
+    <input type="text" id="taskInput" placeholder="今日やることを入力…" maxlength="60">
+    <input type="date" id="dateInput" aria-label="期日">
+    <button id="addBtn" aria-label="追加">＋</button>
+  </div>
+</footer>
+
+<div id="praiseOverlay">
+  <div id="praiseText"></div>
+  <div id="otsukareText">お疲れさま！</div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>

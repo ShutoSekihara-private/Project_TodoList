@@ -1,96 +1,294 @@
-// タスクデータを保持する配列
-let todos = [];
-
-// DOM要素の取得
-const todoForm = document.getElementById("todo-form");
-const taskInput = document.getElementById("task-input");
-const dueInput = document.getElementById("due-input");
-const todoList = document.getElementById("todo-list");
-const progressPercentage = document.getElementById("progress-percentage");
-const completedCount = document.getElementById("completed-count");
-const totalCount = document.getElementById("total-count");
-const progressBarFill = document.getElementById("progress-bar-fill");
-
-// フォーム送信時の処理（タスクの追加）
-todoForm.addEventListener("submit", (e) => {
-  e.preventDefault(); // 画面リロードを防止
-
-  const newTodo = {
-    id: Date.now(), // 一意のID
-    text: taskInput.value.trim(),
-    due: dueInput.value,
-    completed: false
-  };
-
-  todos.push(newTodo);
-
-  // フォーム初期化
-  taskInput.value = "";
-  dueInput.value = "";
-
-  render();
-});
-
-// タスク完了状態の切り替え
-function toggleTodo(id) {
-  todos = todos.map((todo) => {
-    if (todo.id === id) {
-      return { ...todo, completed: !todo.completed };
-    }
-    return todo;
-  });
-  render();
+:root{
+  --pink:#ff8fab;
+  --yellow:#ffd166;
+  --mint:#8fe3c8;
+  --lavender:#c3b4f5;
+  --cream:#fff8f0;
+  --text:#5a4635;
+}
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family:"Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;
+  background:linear-gradient(135deg,#ffe5ec,#fff3e0);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+header{
+  text-align:center;
+  padding:16px 12px 8px;
+}
+header h1{
+  margin:0;
+  font-size:1.4rem;
+}
+.badge-row{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-top:6px;
+  flex-wrap:wrap;
+}
+.count-badge{
+  display:inline-block;
+  background:var(--yellow);
+  padding:4px 16px;
+  border-radius:20px;
+  font-weight:bold;
+  font-size:0.9rem;
+  box-shadow:0 2px 4px rgba(0,0,0,0.1);
+}
+.rate-badge{
+  background:var(--mint);
 }
 
-// 達成率の計算と画面更新
-function updateProgress() {
-  const total = todos.length;
-  const completed = todos.filter((todo) => todo.completed).length;
-  const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
-
-  // テキスト更新
-  totalCount.textContent = total;
-  completedCount.textContent = completed;
-  progressPercentage.textContent = `${percentage}%`;
-
-  // 進捗バー更新
-  progressBarFill.style.width = `${percentage}%`;
+main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:0 12px;
+  max-width:480px;
+  width:100%;
+  margin:0 auto;
+  overflow-y:auto;
 }
 
-// 画面の再描画
-function render() {
-  todoList.innerHTML = "";
+section.panel{
+  background:rgba(255,255,255,0.7);
+  border-radius:18px;
+  padding:12px;
+  margin-bottom:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.06);
+}
 
-  todos.forEach((todo) => {
-    const li = document.createElement("li");
-    li.className = `todo-item ${todo.completed ? "completed" : ""}`;
+#doneSection{
+  max-height:30vh;
+  overflow-y:auto;
+}
+#doneSection h2, #todoSection h2, #futureSection h2{
+  margin:4px 0 10px;
+  font-size:1.05rem;
+  color:var(--text);
+}
 
-    // チェックボックス
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = todo.completed;
-    checkbox.addEventListener("change", () => toggleTodo(todo.id));
+ul{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
 
-    // タスク情報エリア
-    const contentDiv = document.createElement("div");
-    contentDiv.className = "todo-content";
+#doneList li{
+  background:var(--mint);
+  padding:10px 14px;
+  border-radius:14px;
+  font-size:0.95rem;
+  animation:popIn 0.4s ease;
+  box-shadow:0 2px 5px rgba(0,0,0,0.08);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+#doneList li::before{
+  content:"✅";
+}
 
-    const textSpan = document.createElement("div");
-    textSpan.className = "todo-text";
-    textSpan.textContent = todo.text;
+@keyframes popIn{
+  0%{ transform:scale(0.5); opacity:0; }
+  70%{ transform:scale(1.05); }
+  100%{ transform:scale(1); opacity:1; }
+}
 
-    const dueSpan = document.createElement("div");
-    dueSpan.className = "todo-due";
-    dueSpan.textContent = `期限: ${todo.due}`;
+#todoList li, #futureList li{
+  background:#fff;
+  padding:10px 12px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.06);
+  animation:slideIn 0.3s ease;
+}
+@keyframes slideIn{
+  from{ transform:translateY(10px); opacity:0; }
+  to{ transform:translateY(0); opacity:1; }
+}
 
-    contentDiv.appendChild(textSpan);
-    contentDiv.appendChild(dueSpan);
+.task-main{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.task-text{
+  font-size:1rem;
+  word-break:break-word;
+}
+.task-date{
+  font-size:0.78rem;
+  color:#fff;
+  background:var(--lavender);
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:10px;
+  width:fit-content;
+}
 
-    li.appendChild(checkbox);
-    li.appendChild(contentDiv);
+.btn-group{
+  display:flex;
+  gap:6px;
+  flex-shrink:0;
+}
 
-    todoList.appendChild(li);
-  });
+.complete-btn{
+  background:var(--pink);
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:46px;
+  height:46px;
+  font-size:1.3rem;
+  flex-shrink:0;
+  box-shadow:0 3px 6px rgba(0,0,0,0.15);
+  cursor:pointer;
+  transition:transform 0.15s;
+}
+.complete-btn:active{
+  transform:scale(0.9);
+}
 
-  updateProgress();
+.delete-btn{
+  background:none;
+  border:none;
+  color:#bbb;
+  font-size:1.1rem;
+  cursor:pointer;
+  flex-shrink:0;
+  padding:4px;
+}
+
+footer{
+  position:sticky;
+  bottom:0;
+  background:var(--cream);
+  padding:12px;
+  box-shadow:0 -4px 10px rgba(0,0,0,0.06);
+  max-width:480px;
+  width:100%;
+  margin:0 auto;
+}
+.input-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+#taskInput{
+  flex:1 1 140px;
+  padding:14px 16px;
+  border-radius:24px;
+  border:2px solid #ffd6e0;
+  font-size:1rem;
+  outline:none;
+  min-width:0;
+}
+#dateInput{
+  flex:0 0 auto;
+  padding:10px 10px;
+  border-radius:24px;
+  border:2px solid #ffd6e0;
+  font-size:0.9rem;
+  outline:none;
+}
+#taskInput:focus, #dateInput:focus{
+  border-color:var(--pink);
+}
+#addBtn{
+  background:var(--pink);
+  color:#fff;
+  border:none;
+  border-radius:24px;
+  padding:0 22px;
+  font-size:1.4rem;
+  font-weight:bold;
+  box-shadow:0 4px 8px rgba(255,143,171,0.4);
+  cursor:pointer;
+}
+#addBtn:active{
+  transform:scale(0.95);
+}
+
+.empty-msg{
+  text-align:center;
+  color:#bbaa99;
+  font-size:0.9rem;
+  padding:12px 0;
+}
+
+/* 褒めポップアップ */
+#praiseOverlay{
+  position:fixed;
+  inset:0;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+  pointer-events:none;
+  gap:6px;
+}
+#praiseText{
+  font-size:2.4rem;
+  font-weight:900;
+  color:#ff5d8f;
+  text-shadow:
+    0 0 10px #fff,
+    0 0 20px #fff,
+    2px 2px 0 #ffd166;
+  animation:praisePop 1.1s ease forwards;
+  text-align:center;
+  padding:0 20px;
+}
+#otsukareText{
+  font-size:1.3rem;
+  font-weight:800;
+  color:#fff;
+  background:var(--lavender);
+  padding:6px 20px;
+  border-radius:20px;
+  animation:otsukareRise 1.1s ease forwards;
+  opacity:0;
+}
+@keyframes praisePop{
+  0%{ transform:scale(0.3) rotate(-8deg); opacity:0; }
+  30%{ transform:scale(1.25) rotate(4deg); opacity:1; }
+  45%{ transform:scale(1) rotate(0deg); }
+  80%{ transform:scale(1) rotate(0deg); opacity:1; }
+  100%{ transform:scale(0.9) rotate(0deg); opacity:0; }
+}
+@keyframes otsukareRise{
+  0%{ transform:translateY(20px); opacity:0; }
+  40%{ transform:translateY(0); opacity:1; }
+  80%{ opacity:1; }
+  100%{ opacity:0; transform:translateY(-6px); }
+}
+
+.confetti{
+  position:fixed;
+  top:-20px;
+  border-radius:2px;
+  z-index:998;
+  pointer-events:none;
+  animation-name:fall;
+  animation-timing-function:linear;
+  animation-fill-mode:forwards;
+}
+@keyframes fall{
+  0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+  100%{ transform:translateY(110vh) rotate(720deg); opacity:0.9; }
 }
